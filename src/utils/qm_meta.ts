@@ -30,13 +30,30 @@ const fromGBK = (text?: string) => iconv.decode(new Buffer(text || ''), 'gbk');
  * @param id 曲目 ID（<code>number</code>类型或纯数字组成的字符串）
  * @returns Promise
  */
+// music-metadata-browser 在解析部分 flac/ogg 的标签时可能抛错
+// （例如 "FourCC contains invalid characters"）。元数据只是锦上添花，
+// 解析失败时返回一个空壳，保证解密结果本身仍能进入列表。
+async function safeParseBlob(musicBlob: Blob): Promise<IAudioMetadata> {
+  try {
+    return await metaParseBlob(musicBlob);
+  } catch (e) {
+    console.warn('解析音频元数据失败，使用空元数据兜底', e);
+    return {
+      format: {} as any,
+      native: {},
+      quality: { warnings: [] },
+      common: {} as any,
+    } as IAudioMetadata;
+  }
+}
+
 export async function extractQQMusicMeta(
   musicBlob: Blob,
   name: string,
   ext: string,
   id?: number | string,
 ): Promise<MetaResult> {
-  const musicMeta = await metaParseBlob(musicBlob);
+  const musicMeta = await safeParseBlob(musicBlob);
   for (let metaIdx in musicMeta.native) {
     if (!musicMeta.native.hasOwnProperty(metaIdx)) continue;
     if (musicMeta.native[metaIdx].some((item) => item.id === 'TCON' && item.value === '(12)')) {

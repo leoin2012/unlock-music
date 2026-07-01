@@ -44,7 +44,7 @@
 
     <audio :autoplay="playing_auto" :src="playing_url" controls />
 
-    <PreviewTable :policy="filename_policy" :table-data="tableData" @download="saveFile" @edit="editFile" @play="changePlaying" />
+    <PreviewTable :policy="filename_policy" :table-data="tableData" @download="saveFile" @edit="editFile" @play="changePlaying" @convert="handleConvert" />
   </div>
 </template>
 
@@ -56,6 +56,7 @@ import EditDialog from '@/component/EditDialog';
 
 import { DownloadBlobMusic, FilenamePolicy, FilenamePolicies, RemoveBlobMusic, DirectlyWriteFile } from '@/utils/utils';
 import { GetImageFromURL, RewriteMetaToMp3, RewriteMetaToFlac, AudioMimeType, split_regex } from '@/decrypt/utils';
+import { transcodeToMp3 } from '@/utils/transcode';
 import { parseBlob as metaParseBlob } from 'music-metadata-browser';
 
 export default {
@@ -92,6 +93,7 @@ export default {
         RemoveBlobMusic(data);
       } else {
         this.tableData.push(data);
+        this.sortTableData();
         this.$notify.success({
           title: '解锁成功',
           message: '成功解锁 ' + data.title,
@@ -122,6 +124,40 @@ export default {
     changePlaying(url) {
       this.playing_url = url;
       this.playing_auto = true;
+    },
+    // 按歌曲名(title)主序、同名按后缀名(ext)次序排序
+    sortTableData() {
+      this.tableData.sort((a, b) => {
+        const t = (a.title || '').localeCompare(b.title || '');
+        if (t !== 0) return t;
+        return (a.ext || '').localeCompare(b.ext || '');
+      });
+    },
+    async handleConvert(row) {
+      const loading = this.$notify({
+        title: '转换中',
+        message: `正在将 ${row.title} 转换为 MP3，首次转换需加载解码器，请稍候…`,
+        duration: 0,
+      });
+      try {
+        const mp3 = await transcodeToMp3(row);
+        this.tableData.push(mp3);
+        this.sortTableData();
+        this.$notify.success({
+          title: '转换成功',
+          message: `${mp3.title}.mp3 已生成`,
+          duration: 3000,
+        });
+      } catch (e) {
+        console.error('转换失败', e);
+        this.$notify.error({
+          title: '转换失败',
+          message: '转换 ' + row.title + ' 时出错：' + e,
+          duration: 6000,
+        });
+      } finally {
+        loading.close();
+      }
     },
     handleDeleteAll() {
       this.tableData.forEach((value) => {

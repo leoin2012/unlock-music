@@ -45,7 +45,7 @@ set "EMSDK=%EMSDK_DIR%"
 echo.
 echo [1/2] 编译 QmcWasmBundle.js ...
 pushd "%CD%\src\QmcWasm"
-"%EMSDK_PY%" "%EMCC%" QmcWasm.cpp -std=c++14 --bind -s NO_DYNAMIC_EXECUTION=1 -s MODULARIZE=1 -s EXPORT_NAME=QmcCryptoModule -s EXPORTED_RUNTIME_METHODS=getValue,writeArrayToMemory,UTF8ToString -s SINGLE_FILE=1 -O2 -o QmcWasmBundle.js
+"%EMSDK_PY%" "%EMCC%" QmcWasm.cpp -std=c++14 --bind -s NO_DYNAMIC_EXECUTION=1 -s MODULARIZE=1 -s EXPORT_NAME=QmcCryptoModule -s EXPORTED_RUNTIME_METHODS=getValue,writeArrayToMemory,UTF8ToString -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O3 -o QmcWasmBundle.js
 if errorlevel 1 (
     echo [错误] QmcWasmBundle 编译失败。
     popd
@@ -57,7 +57,7 @@ popd
 echo.
 echo [2/2] 编译 KgmWasmBundle.js ...
 pushd "%CD%\src\KgmWasm"
-"%EMSDK_PY%" "%EMCC%" KgmWasm.cpp -std=c++14 --bind -s NO_DYNAMIC_EXECUTION=1 -s MODULARIZE=1 -s EXPORT_NAME=KgmCryptoModule -s EXPORTED_RUNTIME_METHODS=getValue,writeArrayToMemory,UTF8ToString -s SINGLE_FILE=1 -O2 -o KgmWasmBundle.js
+"%EMSDK_PY%" "%EMCC%" KgmWasm.cpp -std=c++14 --bind -s NO_DYNAMIC_EXECUTION=1 -s MODULARIZE=1 -s EXPORT_NAME=KgmCryptoModule -s EXPORTED_RUNTIME_METHODS=getValue,writeArrayToMemory,UTF8ToString -s SINGLE_FILE=1 -s ALLOW_MEMORY_GROWTH=1 -O3 -o KgmWasmBundle.js
 if errorlevel 1 (
     echo [错误] KgmWasmBundle 编译失败。
     popd

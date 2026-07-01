@@ -22,11 +22,19 @@
         <p>{{ scope.row.album }}</p>
       </template>
     </el-table-column>
+    <el-table-column label="格式" prop="ext" column-key="ext" :filters="extFilters" :filter-method="filterExt">
+      <template #default="scope">
+        <span>{{ scope.row.ext }}</span>
+      </template>
+    </el-table-column>
     <el-table-column label="操作">
       <template #default="scope">
         <el-button circle icon="el-icon-video-play" type="success" @click="handlePlay(scope.$index, scope.row)">
         </el-button>
         <el-button circle icon="el-icon-download" @click="handleDownload(scope.row)"></el-button>
+        <el-tooltip v-if="canConvert(scope.row)" content="转换为 MP3" placement="top">
+          <el-button circle icon="el-icon-refresh" type="primary" @click="handleConvert(scope.row)"></el-button>
+        </el-tooltip>
         <el-button circle icon="el-icon-edit" @click="handleEdit(scope.row)"></el-button>
         <el-button circle icon="el-icon-delete" type="danger" @click="handleDelete(scope.$index, scope.row)">
         </el-button>
@@ -37,6 +45,7 @@
 
 <script>
 import { RemoveBlobMusic } from '@/utils/utils';
+import { CanConvertToMp3 } from '@/utils/transcode';
 
 export default {
   name: 'PreviewTable',
@@ -44,8 +53,21 @@ export default {
     tableData: { type: Array, required: true },
     policy: { type: Number, required: true },
   },
-
+  computed: {
+    // 根据当前列表中实际出现的后缀名动态生成筛选项
+    extFilters() {
+      const exts = [...new Set(this.tableData.map((row) => row.ext).filter(Boolean))];
+      exts.sort();
+      return exts.map((ext) => ({ text: ext, value: ext }));
+    },
+  },
   methods: {
+    filterExt(value, row) {
+      return row.ext === value;
+    },
+    canConvert(row) {
+      return CanConvertToMp3(row.ext);
+    },
     handlePlay(index, row) {
       this.$emit('play', row.file);
     },
@@ -55,6 +77,9 @@ export default {
     },
     handleDownload(row) {
       this.$emit('download', row);
+    },
+    handleConvert(row) {
+      this.$emit('convert', row);
     },
     handleEdit(row) {
       this.$emit('edit', row);
