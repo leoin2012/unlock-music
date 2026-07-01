@@ -1,5 +1,3 @@
-import jooxFactory from '@unlock-music/joox-crypto';
-
 import { DecryptResult } from './entity';
 import { AudioMimeType, GetArrayBuffer, SniffAudioExt } from './utils';
 
@@ -13,13 +11,13 @@ export async function Decrypt(file: Blob, raw_filename: string, raw_ext: string)
     throw new Error('请在“解密设定”填写应用 Joox 应用的 UUID。');
   }
 
-  const fileBuffer = new Uint8Array(await GetArrayBuffer(file));
-  const decryptor = jooxFactory(fileBuffer, uuid);
-  if (!decryptor) {
-    throw new Error('不支持的 joox 加密格式');
-  }
+  // JOOX 解密依赖 @unlock-music/joox-crypto，该包已从 npm 下架，本地构建时移除。
+  throw new Error('本地构建暂不支持 JOOX (.ofl_en) 格式解密');
 
-  const musicDecoded = MergeUint8Array(decryptor.decryptFile(fileBuffer));
+  // eslint-disable-next-line no-unreachable
+  const fileBuffer = new Uint8Array(await GetArrayBuffer(file));
+
+  const musicDecoded = MergeUint8Array([fileBuffer]);
   const ext = SniffAudioExt(musicDecoded);
   const mime = AudioMimeType[ext];
 

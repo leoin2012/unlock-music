@@ -9,7 +9,6 @@ import {
 import { parseBlob as metaParseBlob } from 'music-metadata-browser';
 import { DecryptResult } from '@/decrypt/entity';
 import { DecryptKgmWasm } from '@/decrypt/kgm_wasm';
-import { decryptKgmByteAtOffsetV2, decryptVprByteAtOffset } from '@jixun/kugou-crypto/dist/utils/decryptionHelper';
 
 //prettier-ignore
 const VprHeader = [
@@ -43,20 +42,9 @@ export async function Decrypt(file: File, raw_filename: string, raw_ext: string)
   }
 
   if (!musicDecoded) {
-    musicDecoded = new Uint8Array(oriData);
-    let bHeaderLen = new DataView(musicDecoded.slice(0x10, 0x14).buffer);
-    let headerLen = bHeaderLen.getUint32(0, true);
-
-    let key1 = Array.from(musicDecoded.slice(0x1c, 0x2c));
-    key1.push(0);
-
-    musicDecoded = musicDecoded.slice(headerLen);
-    let dataLen = musicDecoded.length;
-
-    const decryptByte = raw_ext === 'vpr' ? decryptVprByteAtOffset : decryptKgmByteAtOffsetV2;
-    for (let i = 0; i < dataLen; i++) {
-      musicDecoded[i] = decryptByte(musicDecoded[i], key1, i);
-    }
+    // 纯 JS fallback 依赖 @jixun/kugou-crypto，该包已从 npm 下架，本地构建时移除。
+    // 仅保留 WASM 解码路径；WASM 不可用时无法解密 kgm/vpr。
+    throw new Error('kgm/vpr 解密失败：WASM 解码器不可用，且本地构建未包含 JS fallback');
   }
 
   const ext = SniffAudioExt(musicDecoded);
